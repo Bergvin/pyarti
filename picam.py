@@ -22,7 +22,7 @@ from PIL import Image
 # diskSpaceToReserve - Delete oldest images to avoid filling disk. How much byte to keep free on disk.
 # cameraSettings     - "" = no extra settings; "-hf" = Set horizontal flip of image; "-vf" = Set vertical flip; "-hf -vf" = both horizontal and vertical flip
 threshold = 10
-sensitivity = 1000
+sensitivity = 700
 forceCapture = True
 forceCaptureTime = 60 * 60 # Once an hour
 filepath = "/home/pi/picam"
@@ -63,7 +63,7 @@ testBorders = [ [[1,testWidth],[1,testHeight]] ]  # [ [[start pixel on left side
 
 # in debug mode, a file debug.bmp is written to disk with marked changed pixel an with marked border of scan-area
 # debug mode should only be turned on while testing the parameters above
-debugMode = False # False or True
+debugMode = True
 
 # Capture a small test image (for motion detection)
 def captureTestImage(settings, width, height):
@@ -77,28 +77,8 @@ def captureTestImage(settings, width, height):
     return im, buffer
 
 # Save a full size image to disk
-def saveImage(settings, width, height, quality, diskSpaceToReserve):
-    keepDiskSpaceFree(diskSpaceToReserve)
-    time = datetime.now()
-    filename = filepath + "/" + filenamePrefix + "-%04d%02d%02d-%02d%02d%02d.jpg" % (time.year, time.month, time.day, time.hour, time.minute, time.second)
-    subprocess.call("raspistill %s -w %s -h %s -t 200 -e jpg -q %s -n -o %s" % (settings, width, height, quality, filename), shell=True)
-    print "Captured %s" % filename
 
-# Keep free space above given level
-def keepDiskSpaceFree(bytesToReserve):
-    if (getFreeSpace() < bytesToReserve):
-        for filename in sorted(os.listdir(filepath + "/")):
-            if filename.startswith(filenamePrefix) and filename.endswith(".jpg"):
-                os.remove(filepath + "/" + filename)
-                print "Deleted %s/%s to avoid filling disk" % (filepath,filename)
-                if (getFreeSpace() > bytesToReserve):
-                    return
 
-# Get available disk space
-def getFreeSpace():
-    st = os.statvfs(filepath + "/")
-    du = st.f_bavail * st.f_frsize
-    return du
 
 # Get first image
 image1, buffer1 = captureTestImage(cameraSettings, testWidth, testHeight)
@@ -156,7 +136,6 @@ while (True):
 
     if takePicture:
         lastCapture = time.time()
-        #saveImage(cameraSettings, saveWidth, saveHeight, saveQuality, diskSpaceToReserve)
         print "MOTION DETECED!"
 
     # Swap comparison buffers
